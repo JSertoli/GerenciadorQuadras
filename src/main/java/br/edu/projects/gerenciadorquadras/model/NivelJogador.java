@@ -2,12 +2,13 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package br.edu.projects.courtsmanager.model;
+package br.edu.projects.gerenciadorquadras.model;
 
 /**
  *
  * @author Joao Sertoli
  */
-public enum TipoQuadra {
-    ABERTA, COBERTA
+public enum NivelJogador {
+    INICIANTE, INTERMEDIARIO, AVANCADO
 }
+

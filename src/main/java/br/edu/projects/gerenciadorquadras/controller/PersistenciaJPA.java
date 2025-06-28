@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package br.edu.projects.courtsmanager.controller;
+package br.edu.projects.gerenciadorquadras.controller;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

@@ -1,5 +1,5 @@
 
-import br.edu.projects.courtsmanager.controller.PersistenciaJPA;
+import br.edu.projects.gerenciadorquadras.controller.PersistenciaJPA;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertNotNull;
