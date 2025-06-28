@@ -7,6 +7,7 @@ package br.edu.projects.gerenciadorquadras;
 import br.edu.projects.gerenciadorquadras.view.PainelQuadra;
 import br.edu.projects.gerenciadorquadras.view.PainelJogador;
 import br.edu.projects.gerenciadorquadras.view.PainelReserva;
+import br.edu.projects.gerenciadorquadras.view.TabelaReservas;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.List;
@@ -37,6 +38,7 @@ public class CourtsManager {
             abas.addTab("Reservas", painelReserva);
             abas.addTab("Jogadores", new PainelJogador(painelReserva));
             abas.addTab("Quadras", new PainelQuadra(painelReserva));
+            abas.addTab("Lista de Quadras", new TabelaReservas());
 
             frame.getContentPane().add(abas);
             frame.setLocationRelativeTo(null);
