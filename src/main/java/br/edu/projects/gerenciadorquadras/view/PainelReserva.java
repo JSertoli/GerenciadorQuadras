@@ -47,11 +47,14 @@ public class PainelReserva extends JPanel {
     private JComboBox<String> cmbMetodo;
 
     private PersistenciaJPA persistencia = new PersistenciaJPA();
+    private TabelaReservas tabelaReservas;
 
-    public PainelReserva() {
+    public PainelReserva(TabelaReservas tabelaReservas) {
         setLayout(new BorderLayout());
 
         JPanel form = new JPanel(new GridLayout(0, 2));
+        
+        this.tabelaReservas = tabelaReservas;
 
         cmbJogadores = new JComboBox<>();
         cmbQuadras = new JComboBox<>();
@@ -137,7 +140,7 @@ public class PainelReserva extends JPanel {
         try {
             Jogador jogador = buscarJogadorPorNome((String) cmbJogadores.getSelectedItem());
             Quadra quadra = buscarQuadraPorNome((String) cmbQuadras.getSelectedItem());
-            quadra.setDisponivel(false);
+            // quadra.setDisponivel(false);
 
             em.getTransaction().begin();
 
@@ -150,6 +153,19 @@ public class PainelReserva extends JPanel {
             reserva.setHorario((String) cmbHora.getSelectedItem());
             reserva.setDuracao((int) spinDuracao.getValue());
             reserva.setConfirmada(chkConfirmada.isSelected());
+            
+            List<Reserva> reservasExistentes = em.createQuery(
+                "SELECT r FROM Reserva r WHERE r.quadra = :quadra AND r.data = :data AND r.horario = :horario", Reserva.class)
+                .setParameter("quadra", quadra)
+                .setParameter("data", new java.sql.Date(chooserData.getDate().getTime()))
+                .setParameter("horario", cmbHora.getSelectedItem().toString())
+                .getResultList();
+
+            if (!reservasExistentes.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Essa quadra já está reservada nesse dia e horário.");
+                return;
+            }
+
 
             em.persist(reserva);
 
@@ -167,8 +183,14 @@ public class PainelReserva extends JPanel {
 
             atualizarJogadores();
             atualizarQuadras();
+            tabelaReservas.carregarReservas();
 
             JOptionPane.showMessageDialog(this, "Reserva realizada com sucesso!");
+            
+            if (this.tabelaReservas != null) {
+                this.tabelaReservas.carregarReservas();
+            }
+
 
         } catch (Exception ex) {
             if (em.getTransaction().isActive()) {

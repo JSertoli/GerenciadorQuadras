@@ -32,13 +32,14 @@ public class CourtsManager {
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setSize(800, 600);
             
-            PainelReserva painelReserva = new PainelReserva();
+            TabelaReservas tabelaReservas = new TabelaReservas();
+            PainelReserva painelReserva = new PainelReserva(tabelaReservas);
 
             JTabbedPane abas = new JTabbedPane();
             abas.addTab("Reservas", painelReserva);
             abas.addTab("Jogadores", new PainelJogador(painelReserva));
             abas.addTab("Quadras", new PainelQuadra(painelReserva));
-            abas.addTab("Lista de Quadras", new TabelaReservas());
+            abas.addTab("Lista de Quadras", tabelaReservas);
 
             frame.getContentPane().add(abas);
             frame.setLocationRelativeTo(null);

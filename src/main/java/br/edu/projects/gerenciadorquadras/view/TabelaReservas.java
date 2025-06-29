@@ -6,9 +6,11 @@ package br.edu.projects.gerenciadorquadras.view;
 
 import br.edu.projects.gerenciadorquadras.controller.PersistenciaJPA;
 import br.edu.projects.gerenciadorquadras.model.Quadra;
+import br.edu.projects.gerenciadorquadras.model.Reserva;
 import br.edu.projects.gerenciadorquadras.model.TipoQuadra;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.sql.Date;
 import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -17,9 +19,11 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -27,14 +31,18 @@ import javax.swing.table.DefaultTableModel;
  * @author Joao Sertoli
  */
 public class TabelaReservas extends JPanel {
-   private JTable tabela;
+    public static TabelaReservas instanciaAtual;
+    private JTable tabela;
     private DefaultTableModel modelo;
     private PersistenciaJPA persistencia = new PersistenciaJPA();
 
     public TabelaReservas() {
+        instanciaAtual = this;
         setLayout(new BorderLayout());
 
-        modelo = new DefaultTableModel(new Object[][]{}, new String[]{"ID", "Nome da Quadra", "Local", "Tipo", "Disponível"}) {
+        modelo = new DefaultTableModel(new Object[][]{}, new String[]{
+            "ID", "Jogador", "Quadra", "Data", "Horário", "Duração", "Confirmada", "Pagamento", "Método"
+        }) {
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
@@ -47,90 +55,102 @@ public class TabelaReservas extends JPanel {
         add(scroll, BorderLayout.CENTER);
 
         JPanel botoes = new JPanel();
-        JButton btnEditar = new JButton("Editar Quadra");
-        JButton btnExcluir = new JButton("Excluir Quadra");
+        JButton btnEditar = new JButton("Editar Reserva");
+        JButton btnExcluir = new JButton("Excluir Reserva");
 
-        btnEditar.addActionListener(e -> editarQuadra());
-        btnExcluir.addActionListener(e -> excluirQuadra());
+        btnEditar.addActionListener(e -> editarReserva());
+        btnExcluir.addActionListener(e -> excluirReserva());
 
         botoes.add(btnEditar);
         botoes.add(btnExcluir);
 
         add(botoes, BorderLayout.SOUTH);
 
-        carregarQuadras();
+        carregarReservas();
     }
 
-    private void carregarQuadras() {
+    public void carregarReservas() {
         modelo.setRowCount(0);
-        List<Quadra> quadras = persistencia.getEntityManager()
-            .createQuery("SELECT q FROM Quadra q", Quadra.class)
+        List<Reserva> reservas = persistencia.getEntityManager()
+            .createQuery("SELECT r FROM Reserva r", Reserva.class)
             .getResultList();
-        for (Quadra q : quadras) {
-            modelo.addRow(new Object[]{q.getId(), q.getNome(), q.getLocalizacao(), q.getTipo().name(), q.isDisponivel() ? "Sim" : "Não"});
+
+        for (Reserva r : reservas) {
+            String pagamentoInfo = (r.getPagamento() != null && r.getPagamento().isConfirmado()) ? "Sim" : "Não";
+            String metodo = r.getPagamento() != null ? r.getPagamento().getMetodo().toString() : "-";
+            modelo.addRow(new Object[]{
+                r.getId(),
+                r.getJogador().getNome(),
+                r.getQuadra().getNome(),
+                r.getData(),
+                r.getHorario(),
+                r.getDuracao(),
+                r.isConfirmada() ? "Sim" : "Não",
+                pagamentoInfo,
+                metodo
+            });
         }
     }
 
-    private void excluirQuadra() {
+    private void excluirReserva() {
         int row = tabela.getSelectedRow();
         if (row >= 0) {
             Integer id = Integer.valueOf(tabela.getValueAt(row, 0).toString());
             try {
-                Quadra q = persistencia.getEntityManager().find(Quadra.class, id);
-                persistencia.remover(q);
-                carregarQuadras();
-                JOptionPane.showMessageDialog(this, "Quadra excluída.");
+                Reserva r = persistencia.getEntityManager().find(Reserva.class, id);
+                persistencia.remover(r);
+                carregarReservas();
+                JOptionPane.showMessageDialog(this, "Reserva excluída.");
             } catch (Exception e) {
                 e.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Erro ao excluir quadra: " + e.getMessage());
+                JOptionPane.showMessageDialog(this, "Erro ao excluir reserva: " + e.getMessage());
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Selecione uma quadra para excluir.");
+            JOptionPane.showMessageDialog(this, "Selecione uma reserva para excluir.");
         }
     }
 
-    private void editarQuadra() {
+    private void editarReserva() {
         int row = tabela.getSelectedRow();
         if (row >= 0) {
             Integer id = Integer.valueOf(tabela.getValueAt(row, 0).toString());
             try {
-                Quadra q = persistencia.getEntityManager().find(Quadra.class, id);
+                Reserva r = persistencia.getEntityManager().find(Reserva.class, id);
 
-                JTextField nomeField = new JTextField(q.getNome());
-                JTextField localField = new JTextField(q.getLocalizacao());
-                JComboBox<TipoQuadra> tipoBox = new JComboBox<>(TipoQuadra.values());
-                tipoBox.setSelectedItem(q.getTipo());
-                JCheckBox disponivelCheck = new JCheckBox("Disponível", q.isDisponivel());
+                JTextField horarioField = new JTextField(r.getHorario());
+                JSpinner duracaoField = new JSpinner(new SpinnerNumberModel(r.getDuracao(), 10, 240, 10));
+                JCheckBox confirmadaCheck = new JCheckBox("Confirmada", r.isConfirmada());
+                JTextField dataField = new JTextField(r.getData().toString());
 
                 JPanel panel = new JPanel(new GridLayout(0, 1));
-                panel.add(new JLabel("Nome da Quadra:"));
-                panel.add(nomeField);
-                panel.add(new JLabel("Localização:"));
-                panel.add(localField);
-                panel.add(new JLabel("Tipo de Quadra:"));
-                panel.add(tipoBox);
-                panel.add(disponivelCheck);
+                panel.add(new JLabel("Data (AAAA-MM-DD):"));
+                panel.add(dataField);
+                panel.add(new JLabel("Horário:"));
+                panel.add(horarioField);
+                panel.add(new JLabel("Duração (min):"));
+                panel.add(duracaoField);
+                panel.add(confirmadaCheck);
 
-                int result = JOptionPane.showConfirmDialog(this, panel, "Editar Quadra",
+                int result = JOptionPane.showConfirmDialog(this, panel, "Editar Reserva",
                         JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
                 if (result == JOptionPane.OK_OPTION) {
-                    q.setNome(nomeField.getText().trim());
-                    q.setLocalizacao(localField.getText().trim());
-                    q.setTipo((TipoQuadra) tipoBox.getSelectedItem());
-                    q.setDisponivel(disponivelCheck.isSelected());
+                    r.setHorario(horarioField.getText().trim());
+                    r.setDuracao((int) duracaoField.getValue());
+                    r.setConfirmada(confirmadaCheck.isSelected());
+                    r.setData(Date.valueOf(dataField.getText().trim()));
 
-                    persistencia.persist(q);
-                    carregarQuadras();
-                    JOptionPane.showMessageDialog(this, "Quadra editada com sucesso.");
+                    persistencia.persist(r);
+                    carregarReservas();
+                    JOptionPane.showMessageDialog(this, "Reserva editada com sucesso.");
                 }
 
             } catch (Exception e) {
                 e.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Erro ao editar quadra: " + e.getMessage());
+                JOptionPane.showMessageDialog(this, "Erro ao editar reserva: " + e.getMessage());
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Selecione uma quadra para editar.");
+            JOptionPane.showMessageDialog(this, "Selecione uma reserva para editar.");
         }
     }
 }
